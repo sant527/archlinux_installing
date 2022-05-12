@@ -198,7 +198,10 @@ mount /dev/nvme0n1p7 /mnt
 mkdir /mnt/home
 mount /dev/nvme0n1p9 /mnt/home
 
-# NOTE DONT MOUNT EFI HERE. MOUNT IN BOOT LOADER SECTION
+# mount efi
+
+mkdir /mnt/boot/efi
+mount /dev/nvme0n1p1 /mnt/boot/efi
 
 # enable swap partition 
 swapon /dev/nvme0n1p8
@@ -294,6 +297,13 @@ passwd
 pacman -S iwd
 ```
 
+to access wifi FOO is wlan0 etc
+
+```
+# PASS = passphrase ; FOO = device ; SSID = ssid
+iwctl --passphrase PASS station FOO connect SSID
+```
+
 # How To Install and Configure a Boot Loader
 
 > GRUB is one of the most popular bootloaders out there.
@@ -314,18 +324,19 @@ pacman -S os-prober
 
 ## mount the EFI system partition 
 
-- first create an efi directory
+We already mounted it at `/boot/efi`
+
 ```
-mkdir /boot/efi
-```
-- After creating the directory, you'll have to mount your EFI system partition in that directory.
-```
-mount /dev/nvme0n1p1 /boot/efi
+lsblk
 ```
 
 # Install GRUB in the newly mounted EFI system partition:
 
 Now, we'll use the grub-install command to install GRUB in the newly mounted EFI system partition:
+
+```
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=grub
+```
 
 # enable os-prober
 
