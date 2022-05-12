@@ -90,7 +90,120 @@ Swap space can be used for two purposes,
 - to extend the virtual memory beyond the installed physical memory (RAM), 
 - and also for suspend-to-disk support.
 
-# WE WILL NOT HAVE SWAP -BECAUSE IT CAN CREATES LATER ALSO.
+# power off and the power on and press F12
+- it shows boot menu
+- - select the USB
 
+https://gist.github.com/moral-g/3b02fffc32b114bdacf92f279ccb3479
 
+# Verify the boot mode
+```
+ls /sys/firmware/efi/efivars
+```
+If the command shows the directory without error, then the system is booted in UEFI mode.
 
+# Connect to the internet
+
+## Ensure your network interface is listed
+```
+ip link
+```
+
+## iwctl steps for WIFI:
+
+```
+iwctl
+[iwd] device list
+# This will list devices, replace wnated on with FOO for steps below
+[iwd] station FOO scan
+[iwd] station FOO get-networks
+[iwd] station FOO connect SSID
+
+example:
+[iwd] station wlan0 connect Xiaomi_AAF3_EXT
+Passphrase: 
+```
+
+## Verify connection
+```
+ping google.com
+```
+
+## Ensure the system clock is accurate
+timedatectl set-ntp true
+
+## Check the service status
+timedatectl status
+
+## Create partitions cfdisk  (disk partitioning)
+
+**NOTE: since for windows we already have ann efi partition. SO dont have to create another efi partition**
+
+```
+fdisk -l
+```
+
+```
+cfdisk /dev/nvme0n1
+```
+
+- Highlight the free space and select [ New ] once again. 
+- Put the desired partition size. You can use M to denote megabytes, G for gigabytes, and T for terabytes.
+- To change the default type, keep the newly created partition highlighted and select [ Type ] from the list of actions.
+- The default is Linux filesystem
+
+So finally we have to hit Write
+
+So we have
+```
+/dev/XXXX1 - 75 GB linux filesystem
+/dev/XXXX2 - 996M linux swap
+/dev/XXXX3 - 25GB linux filesystem
+```
+
+## How To Format the Partitions
+
+- take a final look at your partition list by executing the following command:
+```
+fdisk -l /dev/nvme0n1
+```
+For all linux systems partitions use ext4 format
+
+```
+mkfs.ext4 /dev/nvme0n1p7
+mkfs.ext4 /dev/nvme0n1p9
+```
+
+For swap
+
+```
+mkswap /dev/nvme0n1p8
+```
+
+# Mount the File Systems
+
+```
+# mount root to /mnt
+mount /dev/nvme0n1p7 /mnt
+
+# make home dir and mount 
+mkdir /mnt/home
+mount /dev/nvme0n1p9 /mnt/home
+
+# make efi dir and mount 
+mkdir /mnt/boot
+mount /dev/nvme0n1p1 /mnt/boot
+
+# enable swap partition 
+swapon /dev/nvme0n1p8
+```
+
+# Select the mirrors
+```
+vim /etc/pacman.d/mirrorlist
+
+# remove all the mirrors and put
+Server = https://archive.archlinux.org/repos/2022/05/01/$repo/os/$arch
+```
+
+# Install essential packages
