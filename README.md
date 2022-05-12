@@ -124,6 +124,14 @@ example:
 Passphrase: 
 ```
 
+or:
+
+If SSID and passphrase is known
+```
+# PASS = passphrase ; FOO = device ; SSID = ssid
+iwctl --passphrase PASS station FOO connect SSID
+```
+
 ## Verify connection
 ```
 ping google.com
@@ -190,9 +198,7 @@ mount /dev/nvme0n1p7 /mnt
 mkdir /mnt/home
 mount /dev/nvme0n1p9 /mnt/home
 
-# make efi dir and mount 
-mkdir /mnt/boot
-mount /dev/nvme0n1p1 /mnt/boot
+# NOTE DONT MOUNT EFI HERE. MOUNT IN BOOT LOADER SECTION
 
 # enable swap partition 
 swapon /dev/nvme0n1p8
@@ -204,6 +210,135 @@ vim /etc/pacman.d/mirrorlist
 
 # remove all the mirrors and put
 Server = https://archive.archlinux.org/repos/2022/05/01/$repo/os/$arch
+
+# Then update
+pacman -Sy
 ```
 
 # Install essential packages
+```
+pacstrap /mnt base base-devel linux linux-firmware sudo nano ntfs-3g networkmanager
+```
+- ntfs-3g – NTFS filesystem driver and utilities required for working with NTFS drives.
+
+
+# Configure the system
+
+# Generate an fstab file
+> The fstab file can be used to define how disk partitions, various other block devices, or remote file systems should be mounted into the file system.
+
+```
+genfstab -U /mnt >> /mnt/etc/fstab
+```
+
+# Chroot
+
+Change root into the new system:
+
+```
+arch-chroot /mnt
+```
+
+# Time zone
+
+Set the time zone:
+
+```
+ln -sf /usr/share/zoneinfo/Asia/Calcutta /etc/localtime
+```
+
+# Run to generate /etc/adjtime
+
+```
+hwclock --systohc
+```
+
+# Localization
+
+> Edit /etc/locale.gen and uncomment en_US.UTF-8 UTF-8
+
+ Generate the locales by running:
+ 
+ ```
+ locale-gen
+ ```
+
+> you'll have to tell Arch Linux which one to use by default. To do so, open the /etc/locale.conf file and add the following line to it:
+ 
+ ```
+nano /etc/locale.conf
+
+# ADD THE BELOW LINE
+LANG=en_US.UTF-8
+```
+
+# Network configuration
+Create the hostname file:
+
+```
+nano /etc/hostname
+
+# ADD THE BELOW LINE
+gauranga
+```
+
+# Root password
+
+```
+passwd
+```
+
+# install iwd
+
+```
+pacman -S iwd
+```
+
+# How To Install and Configure a Boot Loader
+
+> GRUB is one of the most popular bootloaders out there.
+
+To install GRUB, you'll have to first install two packages.
+
+```
+pacman -S grub efibootmgr
+```
+
+If you're installing alongside other operating systems, you'll also need the os-prober package:
+
+```
+pacman -S os-prober
+```
+
+> This program will search for already installed operating systems on your system and will make them a part of the GRUB configuration file.
+
+## mount the EFI system partition 
+
+- first create an efi directory
+```
+mkdir /boot/efi
+```
+- After creating the directory, you'll have to mount your EFI system partition in that directory.
+```
+mount /dev/nvme0n1p1 /boot/efi
+```
+
+# Install GRUB in the newly mounted EFI system partition:
+
+Now, we'll use the grub-install command to install GRUB in the newly mounted EFI system partition:
+
+# enable os-prober
+
+> If you're installing alongside other operating systems, you'll have to enable os-prober before generating the configuration file. To do so, open the /etc/default/grub file in nano text editor. Locate the following line and uncomment it:
+
+```
+#GRUB_DISABLE_OS_PROBER=false
+```
+
+> This should be the last line in the aforementioned file so just scroll to the bottom and uncomment it.
+
+# generating the grub configuration file
+
+```
+grub-mkconfig -o /boot/grub/grub.cfg
+```
