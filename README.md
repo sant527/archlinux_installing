@@ -353,3 +353,113 @@ grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=grub
 ```
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
+# reboot
+
+# POST INSTALLATION
+
+# create user and add as sudoer
+
+```
+useradd --create-home simha
+```
+change password
+
+```
+passwd
+```
+
+add user simha as sudoer
+
+```
+visudo
+```
+
+add
+
+```
+simha ALL=(ALL) ALL
+```
+
+
+# enable systemd-resolved.service
+
+```
+systemctl status systemd-resolved.service
+
+systemctl enable systemd-resolved.service
+
+systemctl restart systemd-resolved.service
+```
+
+this is not enabled by default. 
+
+# connect to internet
+
+```
+iwctl --passphrase PASS station FOO connect SSID
+```
+
+# install 
+```
+wget, git, vi, vim
+```
+
+# install yay
+pacman -S --needed git base-devel
+sudo -u simha -i (change to normal user)
+git clone https://aur.archlinux.org/yay.git
+cd yay
+makepkg -si (should be done through user not root)
+
+# install zsh
+
+```
+pacman -S zsh
+```
+
+**change the default shell
+
+```
+chsh -s /usr/bin/zsh
+```
+
+**run zsh command to configure the .zshrc
+```
+zsh
+```
+
+**install oh-my-zsh
+```
+sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
+```
+
+**and replace theme as aussiegeek
+
+# install hstr
+
+```
+yay -S hstr-git
+```
+
+```
+# Configure HSTR just by running:
+hstr --show-configuration >> ~/.zshrc
+``
+
+
+To search for multiple line commands 
+add this to .zshrc
+```
+bindkey '^S' history-incremental-pattern-search-backward
+```
+
+#do the same for the simha user
+
+
+
+
+
+
+
+
+
